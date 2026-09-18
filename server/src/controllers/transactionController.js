@@ -1,30 +1,28 @@
-const Transaction = require('../models/Transaction');
-const Account = require('../models/Account');
+import Transaction from '../models/Transaction.js';
+import Account from '../models/Account.js';
+import Category from '../models/Category.js';
+import AppError from '../utils/AppError.js';
 
 // Helper to update account balance based on transaction logic
-const updateAccountBalance = async (accountId, amount, isDeduction) => {
+const updateAccountBalance = async (accountId, amount, isDeduction, session) => {
   if (!accountId) return;
-  const account = await Account.findById(accountId);
+  const account = await Account.findById(accountId).session(session);
   if (!account) return;
   
   const isCC = account.type === 'CREDIT_CARD';
   
   let change = 0;
   if (isDeduction) {
-    // EXPENSE or Transfer Source
-    // Deducting money: For bank, balance goes down. For CC, debt goes up.
     change = isCC ? amount : -amount;
   } else {
-    // INCOME, REFUND or Transfer Destination
-    // Adding money: For bank, balance goes up. For CC, debt goes down.
     change = isCC ? -amount : amount;
   }
   
   account.balance += change;
-  await account.save();
+  await account.save({ session });
 };
 
-exports.getTransactions = async (req, res, next) => {
+export const getTransactions = async (req, res, next) => {
   try {
     const { month, year, sort, page, limit, search, categoryId } = req.query;
     const query = { userId: req.user.id };
@@ -75,7 +73,7 @@ exports.getTransactions = async (req, res, next) => {
   }
 };
 
-exports.createTransaction = async (req, res, next) => {
+export const createTransaction = async (req, res, next) => {
   const session = await Transaction.startSession();
   session.startTransaction();
   try {
@@ -84,6 +82,25 @@ exports.createTransaction = async (req, res, next) => {
     const parsedDate = new Date(date);
     const month = parsedDate.getMonth() + 1;
     const year = parsedDate.getFullYear();
+    
+    // Verify ownership of accounts
+    const accountIds = [accountId, sourceAccountId, destinationAccountId].filter(id => id);
+    if (accountIds.length > 0) {
+      // Create a unique array of account IDs to check
+      const uniqueAccountIds = [...new Set(accountIds)];
+      const accountsCount = await Account.countDocuments({ _id: { $in: uniqueAccountIds }, userId: req.user.id });
+      if (accountsCount !== uniqueAccountIds.length) {
+        throw new AppError('One or more accounts not found or do not belong to you', 403);
+      }
+    }
+
+    // Verify ownership of category
+    if (categoryId) {
+      const category = await Category.findOne({ _id: categoryId, $or: [{ userId: req.user.id }, { isDefault: true }] });
+      if (!category) {
+        throw new AppError('Category not found or does not belong to you', 403);
+      }
+    }
     
     const transaction = await Transaction.create([{
       userId: req.user.id,
@@ -103,12 +120,12 @@ exports.createTransaction = async (req, res, next) => {
 
     // Apply balances
     if (type === 'EXPENSE') {
-      await updateAccountBalance(accountId, parseInt(amount), true);
+      await updateAccountBalance(accountId, parseInt(amount), true, session);
     } else if (type === 'INCOME' || type === 'REFUND') {
-      await updateAccountBalance(accountId, parseInt(amount), false);
+      await updateAccountBalance(accountId, parseInt(amount), false, session);
     } else if (type === 'TRANSFER') {
-      await updateAccountBalance(sourceAccountId, parseInt(amount), true);
-      await updateAccountBalance(destinationAccountId, parseInt(amount), false);
+      await updateAccountBalance(sourceAccountId, parseInt(amount), true, session);
+      await updateAccountBalance(destinationAccountId, parseInt(amount), false, session);
     }
     
     await session.commitTransaction();
@@ -122,24 +139,24 @@ exports.createTransaction = async (req, res, next) => {
   }
 };
 
-exports.deleteTransaction = async (req, res, next) => {
+export const deleteTransaction = async (req, res, next) => {
   const session = await Transaction.startSession();
   session.startTransaction();
   try {
     const transaction = await Transaction.findOne({ _id: req.params.id, userId: req.user.id });
     if (!transaction) {
-      return res.status(404).json({ success: false, message: 'Transaction not found' });
+      return next(new AppError('Transaction not found', 404));
     }
     
     // Reverse balances
     const amount = transaction.amount;
     if (transaction.type === 'EXPENSE') {
-      await updateAccountBalance(transaction.accountId, amount, false);
+      await updateAccountBalance(transaction.accountId, amount, false, session);
     } else if (transaction.type === 'INCOME' || transaction.type === 'REFUND') {
-      await updateAccountBalance(transaction.accountId, amount, true);
+      await updateAccountBalance(transaction.accountId, amount, true, session);
     } else if (transaction.type === 'TRANSFER') {
-      await updateAccountBalance(transaction.sourceAccountId, amount, false);
-      await updateAccountBalance(transaction.destinationAccountId, amount, true);
+      await updateAccountBalance(transaction.sourceAccountId, amount, false, session);
+      await updateAccountBalance(transaction.destinationAccountId, amount, true, session);
     }
     
     await Transaction.deleteOne({ _id: req.params.id }, { session });

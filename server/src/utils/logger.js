@@ -4,4 +4,4 @@ const logger = {
   warn: (msg) => console.warn(`[WARN] ${msg}`)
 };
 
-module.exports = logger;
+export default logger;

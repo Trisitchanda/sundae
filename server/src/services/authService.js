@@ -1,9 +1,10 @@
-const User = require('../models/User');
-const Session = require('../models/Session');
-const SecurityEventLog = require('../models/SecurityEventLog');
-const bcrypt = require('bcrypt');
-const { generateAccessToken, generateRefreshToken, hashToken } = require('../utils/tokens');
-const logger = require('../utils/logger');
+import User from '../models/User.js';
+import Session from '../models/Session.js';
+import SecurityEventLog from '../models/SecurityEventLog.js';
+import bcrypt from 'bcrypt';
+import { generateAccessToken, generateRefreshToken, hashToken } from '../utils/tokens.js';
+import logger from '../utils/logger.js';
+import AppError from '../utils/AppError.js';
 
 const logSecurityEvent = async (userId, event, ip, userAgent) => {
   try {
@@ -17,13 +18,13 @@ const registerUser = async (email, password, ip, userAgent) => {
   if (process.env.ALLOW_REGISTRATION !== 'true') {
     const userCount = await User.countDocuments();
     if (userCount > 0) {
-      throw new Error('Registration is currently disabled.');
+      throw new AppError('Registration is currently disabled.', 403);
     }
   }
 
   const existingUser = await User.findOne({ email });
   if (existingUser) {
-    throw new Error('Email already registered');
+    throw new AppError('Email already registered', 400);
   }
 
   const salt = await bcrypt.genSalt(12);
@@ -43,13 +44,13 @@ const loginUser = async (email, password, ip, userAgent) => {
   const user = await User.findOne({ email });
   if (!user) {
     await logSecurityEvent(null, 'LOGIN_FAILED_UNKNOWN_USER', ip, userAgent);
-    throw new Error('Invalid credentials');
+    throw new AppError('Invalid credentials', 401);
   }
 
   const isMatch = await bcrypt.compare(password, user.passwordHash);
   if (!isMatch) {
     await logSecurityEvent(user._id, 'LOGIN_FAILED_BAD_PASSWORD', ip, userAgent);
-    throw new Error('Invalid credentials');
+    throw new AppError('Invalid credentials', 401);
   }
 
   user.lastLoginAt = new Date();
@@ -76,13 +77,13 @@ const loginUser = async (email, password, ip, userAgent) => {
 };
 
 const refreshSession = async (oldRefreshToken, ip, userAgent) => {
-  if (!oldRefreshToken) throw new Error('No refresh token provided');
+  if (!oldRefreshToken) throw new AppError('No refresh token provided', 401);
 
   const refreshTokenHash = hashToken(oldRefreshToken);
   const session = await Session.findOne({ refreshTokenHash }).populate('userId');
 
   if (!session || session.expiresAt < new Date()) {
-    throw new Error('Invalid or expired refresh token');
+    throw new AppError('Invalid or expired refresh token', 401);
   }
 
   const user = session.userId;
@@ -117,12 +118,12 @@ const logoutUser = async (refreshToken, userId, ip, userAgent) => {
 
 const changePassword = async (userId, currentPassword, newPassword, ip, userAgent) => {
   const user = await User.findById(userId);
-  if (!user) throw new Error('User not found');
+  if (!user) throw new AppError('User not found', 404);
 
   const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
   if (!isMatch) {
     await logSecurityEvent(userId, 'PASSWORD_CHANGE_FAILED', ip, userAgent);
-    throw new Error('Invalid current password');
+    throw new AppError('Invalid current password', 400);
   }
 
   const salt = await bcrypt.genSalt(12);
@@ -135,7 +136,7 @@ const changePassword = async (userId, currentPassword, newPassword, ip, userAgen
   await logSecurityEvent(userId, 'ALL_SESSIONS_REVOKED', ip, userAgent);
 };
 
-module.exports = {
+export {
   registerUser,
   loginUser,
   refreshSession,

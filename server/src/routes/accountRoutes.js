@@ -1,10 +1,12 @@
-const express = require('express');
-const router = express.Router();
-const accountController = require('../controllers/accountController');
+import express from 'express';
+import * as accountController from '../controllers/accountController.js';
+import { authenticate } from '../middleware/auth.js';
+import { validate } from '../middleware/validate.js';
+import { createAccountSchema } from '../schemas/account.schemas.js';
 
-const { authenticate } = require('../middleware/auth');
+const router = express.Router();
 
 router.get('/', authenticate, accountController.getAccounts);
-router.post('/', authenticate, accountController.createAccount);
+router.post('/', authenticate, validate(createAccountSchema), accountController.createAccount);
 
-module.exports = router;
+export default router;

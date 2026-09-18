@@ -1,14 +1,10 @@
-const User = require('../models/User');
-const AiInsight = require('../models/AiInsight');
+import User from '../models/User.js';
+import AiInsight from '../models/AiInsight.js';
+import AppError from '../utils/AppError.js';
 
-exports.updateIncome = async (req, res, next) => {
+export const updateIncome = async (req, res, next) => {
   try {
     const { baseSalary } = req.body;
-    
-    if (baseSalary === undefined || isNaN(baseSalary) || baseSalary < 0) {
-      return res.status(400).json({ success: false, message: 'Invalid base salary' });
-    }
-
     const user = await User.findByIdAndUpdate(
       req.user.id,
       { baseSalary: Math.round(Number(baseSalary) * 100) },
@@ -16,7 +12,7 @@ exports.updateIncome = async (req, res, next) => {
     ).select('-passwordHash');
 
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+      return next(new AppError('User not found', 404));
     }
 
     res.json({ success: true, data: user });
@@ -25,14 +21,9 @@ exports.updateIncome = async (req, res, next) => {
   }
 };
 
-exports.updateSavingsGoal = async (req, res, next) => {
+export const updateSavingsGoal = async (req, res, next) => {
   try {
     const { savingsGoalRate } = req.body;
-    
-    if (savingsGoalRate === undefined || isNaN(savingsGoalRate) || savingsGoalRate < 0 || savingsGoalRate > 100) {
-      return res.status(400).json({ success: false, message: 'Invalid savings goal rate (must be 0-100)' });
-    }
-
     const rateAsDecimal = Number(savingsGoalRate) / 100;
 
     const user = await User.findByIdAndUpdate(
@@ -42,7 +33,7 @@ exports.updateSavingsGoal = async (req, res, next) => {
     ).select('-passwordHash');
 
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+      return next(new AppError('User not found', 404));
     }
 
     // Invalidate AI cache

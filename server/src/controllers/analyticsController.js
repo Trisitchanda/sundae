@@ -1,8 +1,9 @@
-const mongoose = require('mongoose');
-const Transaction = require('../models/Transaction');
-const Account = require('../models/Account');
+import mongoose from 'mongoose';
+import Transaction from '../models/Transaction.js';
+import Account from '../models/Account.js';
+import User from '../models/User.js';
 
-exports.getSummary = async (req, res, next) => {
+export const getSummary = async (req, res, next) => {
   try {
     const { year, month } = req.query;
     if (!year || !month) return res.status(400).json({ success: false, message: 'Year and month required' });
@@ -11,7 +12,7 @@ exports.getSummary = async (req, res, next) => {
     const m = Number(month);
     
     const userIdObj = new mongoose.Types.ObjectId(req.user.id);
-    const user = await require('../models/User').findById(req.user.id);
+    const user = await User.findById(req.user.id);
     
     // Total income from INCOME transactions this month
     const incomeAgg = await Transaction.aggregate([
@@ -80,7 +81,7 @@ exports.getSummary = async (req, res, next) => {
   }
 };
 
-exports.getCategoryBreakdown = async (req, res, next) => {
+export const getCategoryBreakdown = async (req, res, next) => {
   try {
     const { year, month } = req.query;
     if (!year || !month) return res.status(400).json({ success: false, message: 'Year and month required' });
@@ -103,7 +104,7 @@ exports.getCategoryBreakdown = async (req, res, next) => {
       { $sort: { total: -1 } }
     ]);
 
-    const user = await require('../models/User').findById(req.user.id);
+    const user = await User.findById(req.user.id);
     const budgets = user.categoryBudgets || new Map();
 
     const result = breakdown.map(item => ({
@@ -117,7 +118,7 @@ exports.getCategoryBreakdown = async (req, res, next) => {
   }
 };
 
-exports.getMonthlyTrend = async (req, res, next) => {
+export const getMonthlyTrend = async (req, res, next) => {
   try {
     const { year } = req.query;
     if (!year) return res.status(400).json({ success: false, message: 'Year required' });
@@ -139,7 +140,7 @@ exports.getMonthlyTrend = async (req, res, next) => {
       { $group: { _id: '$month', income: { $sum: '$amount' } } }
     ]);
 
-    const user = await require('../models/User').findById(req.user.id);
+    const user = await User.findById(req.user.id);
     const baseSalary = user.baseSalary || 0;
     const currentYear = new Date().getFullYear();
     const currentMonth = new Date().getMonth() + 1;

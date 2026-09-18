@@ -1,11 +1,13 @@
-const express = require('express');
+import express from 'express';
+import * as transactionController from '../controllers/transactionController.js';
+import { authenticate } from '../middleware/auth.js';
+import { validate } from '../middleware/validate.js';
+import { createTransactionSchema, getTransactionsSchema } from '../schemas/transaction.schemas.js';
+
 const router = express.Router();
-const transactionController = require('../controllers/transactionController');
 
-const { authenticate } = require('../middleware/auth');
-
-router.get('/', authenticate, transactionController.getTransactions);
-router.post('/', authenticate, transactionController.createTransaction);
+router.get('/', authenticate, validate(getTransactionsSchema), transactionController.getTransactions);
+router.post('/', authenticate, validate(createTransactionSchema), transactionController.createTransaction);
 router.delete('/:id', authenticate, transactionController.deleteTransaction);
 
-module.exports = router;
+export default router;

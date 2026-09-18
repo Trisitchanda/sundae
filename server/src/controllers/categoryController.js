@@ -1,9 +1,9 @@
-const Category = require('../models/Category');
-const AiInsight = require('../models/AiInsight');
-const User = require('../models/User');
-const { z } = require('zod');
+import Category from '../models/Category.js';
+import AiInsight from '../models/AiInsight.js';
+import User from '../models/User.js';
+import AppError from '../utils/AppError.js';
 
-exports.getCategories = async (req, res, next) => {
+export const getCategories = async (req, res, next) => {
   try {
     const categories = await Category.find({
       $or: [{ userId: req.user.id }, { isDefault: true }]
@@ -23,9 +23,9 @@ exports.getCategories = async (req, res, next) => {
   }
 };
 
-exports.createCategory = async (req, res, next) => {
+export const createCategory = async (req, res, next) => {
   try {
-    const { name } = z.object({ name: z.string().min(1) }).parse(req.body);
+    const { name } = req.body;
     const category = await Category.create({ userId: req.user.id, name });
     
     // Invalidate AI cache
@@ -33,22 +33,22 @@ exports.createCategory = async (req, res, next) => {
 
     res.status(201).json({ success: true, data: { ...category.toObject(), budgetLimit: null } });
   } catch (error) {
-    if (error.code === 11000) return res.status(400).json({ success: false, message: 'Category already exists' });
-    if (error instanceof z.ZodError) return res.status(400).json({ success: false, message: 'Invalid input data' });
+    if (error.code === 11000) return next(new AppError('Category already exists', 400));
     next(error);
   }
 };
 
-exports.updateCategory = async (req, res, next) => {
+export const updateCategory = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { budgetLimit } = z.object({ 
-      budgetLimit: z.number().min(0).nullable().optional() 
-    }).parse(req.body);
+    const { budgetLimit } = req.body;
 
-    const category = await Category.findById(id);
+    const category = await Category.findOne({ 
+      _id: id, 
+      $or: [{ userId: req.user.id }, { isDefault: true }] 
+    });
     if (!category) {
-      return res.status(404).json({ success: false, message: 'Category not found' });
+      return next(new AppError('Category not found', 404));
     }
 
     const user = await User.findById(req.user.id);
@@ -66,7 +66,6 @@ exports.updateCategory = async (req, res, next) => {
 
     res.json({ success: true, data: { ...category.toObject(), budgetLimit } });
   } catch (error) {
-    if (error instanceof z.ZodError) return res.status(400).json({ success: false, message: 'Invalid input data' });
     next(error);
   }
 };

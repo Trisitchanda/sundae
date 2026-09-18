@@ -1,4 +1,4 @@
-const crypto = require('crypto');
+import crypto from 'crypto';
 
 const csrfProtection = (req, res, next) => {
   if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
@@ -29,4 +29,4 @@ const csrfProtection = (req, res, next) => {
   next();
 };
 
-module.exports = { csrfProtection };
+export { csrfProtection };

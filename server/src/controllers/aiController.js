@@ -1,12 +1,12 @@
-const rateLimit = require('express-rate-limit');
-const { OpenAI } = require('openai');
-const mongoose = require('mongoose');
-const User = require('../models/User');
-const AiInsight = require('../models/AiInsight');
-const Category = require('../models/Category');
-const Transaction = require('../models/Transaction');
-const Account = require('../models/Account');
-const budgetService = require('../services/budgetService');
+import rateLimit from 'express-rate-limit';
+import { OpenAI } from 'openai';
+import mongoose from 'mongoose';
+import User from '../models/User.js';
+import AiInsight from '../models/AiInsight.js';
+import Category from '../models/Category.js';
+import Transaction from '../models/Transaction.js';
+import Account from '../models/Account.js';
+import * as budgetService from '../services/budgetService.js';
 
 // Helper to calculate totals for a given month
 const getMonthData = async (userIdObj, y, m, fallbackBaseSalary) => {
@@ -73,7 +73,7 @@ const aiLimiter = rateLimit({
   }
 });
 
-exports.analyze = async (req, res, next) => {
+export const analyze = async (req, res, next) => {
   try {
     const { period, forceRefresh } = req.body;
     if (!period) return res.status(400).json({ success: false, message: 'Period required' });

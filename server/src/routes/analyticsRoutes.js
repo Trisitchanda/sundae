@@ -1,6 +1,6 @@
-const express = require('express');
-const analyticsController = require('../controllers/analyticsController');
-const { authenticate } = require('../middleware/auth');
+import express from 'express';
+import * as analyticsController from '../controllers/analyticsController.js';
+import { authenticate } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -10,4 +10,4 @@ router.get('/summary', analyticsController.getSummary);
 router.get('/category', analyticsController.getCategoryBreakdown);
 router.get('/monthly-trend', analyticsController.getMonthlyTrend);
 
-module.exports = router;
+export default router;

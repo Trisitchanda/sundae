@@ -1,6 +1,6 @@
-const Account = require('../models/Account');
+import Account from '../models/Account.js';
 
-exports.getAccounts = async (req, res, next) => {
+export const getAccounts = async (req, res, next) => {
   try {
     const accounts = await Account.find({ userId: req.user.id }).sort({ createdAt: 1 });
     res.json({ success: true, data: accounts });
@@ -9,14 +9,9 @@ exports.getAccounts = async (req, res, next) => {
   }
 };
 
-exports.createAccount = async (req, res, next) => {
+export const createAccount = async (req, res, next) => {
   try {
     const { name, type, balance, creditLimit } = req.body;
-    
-    if (!name || !type) {
-      return res.status(400).json({ success: false, message: 'Name and type are required' });
-    }
-
     const account = await Account.create({
       userId: req.user.id,
       name,

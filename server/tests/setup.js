@@ -1,4 +1,5 @@
-const mongoose = require('mongoose');
+import { jest, beforeAll, afterAll, afterEach } from '@jest/globals';
+import mongoose from 'mongoose';
 
 jest.setTimeout(30000);
 

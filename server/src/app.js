@@ -1,21 +1,19 @@
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const cookieParser = require('cookie-parser');
-const morgan = require('morgan');
-const rateLimit = require('express-rate-limit');
-const { errorHandler } = require('./middleware/errorHandler');
-const { csrfProtection } = require('./middleware/csrf');
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
+import morgan from 'morgan';
+import rateLimit from 'express-rate-limit';
+import { errorHandler } from './middleware/errorHandler.js';
+import { csrfProtection } from './middleware/csrf.js';
 
-const authRoutes = require('./routes/authRoutes');
-const categoryRoutes = require('./routes/categoryRoutes');
-const incomeRoutes = require('./routes/incomeRoutes');
-const expenseRoutes = require('./routes/expenseRoutes');
-const analyticsRoutes = require('./routes/analyticsRoutes');
-const settingsRoutes = require('./routes/settingsRoutes');
-const aiRoutes = require('./routes/aiRoutes');
-const accountRoutes = require('./routes/accountRoutes');
-const transactionRoutes = require('./routes/transactionRoutes');
+import authRoutes from './routes/authRoutes.js';
+import categoryRoutes from './routes/categoryRoutes.js';
+import analyticsRoutes from './routes/analyticsRoutes.js';
+import settingsRoutes from './routes/settingsRoutes.js';
+import aiRoutes from './routes/aiRoutes.js';
+import accountRoutes from './routes/accountRoutes.js';
+import transactionRoutes from './routes/transactionRoutes.js';
 
 const app = express();
 
@@ -49,8 +47,6 @@ app.use(csrfProtection);
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
-app.use('/api/income', incomeRoutes);
-app.use('/api/expenses', expenseRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/ai', aiRoutes);
@@ -60,4 +56,4 @@ app.use('/api/transactions', transactionRoutes);
 // Error Handling
 app.use(errorHandler);
 
-module.exports = app;
+export default app;

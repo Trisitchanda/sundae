@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const securityEventLogSchema = new mongoose.Schema(
   {
@@ -10,4 +10,4 @@ const securityEventLogSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model('SecurityEventLog', securityEventLogSchema);
+export default mongoose.model('SecurityEventLog', securityEventLogSchema);

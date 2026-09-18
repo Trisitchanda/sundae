@@ -1,4 +1,4 @@
-const jwt = require('jsonwebtoken');
+import jwt from 'jsonwebtoken';
 
 const authenticate = (req, res, next) => {
   const token = req.cookies.accessToken;
@@ -22,4 +22,4 @@ const requireRole = (role) => (req, res, next) => {
   next();
 };
 
-module.exports = { authenticate, requireRole };
+export { authenticate, requireRole };

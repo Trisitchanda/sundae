@@ -1,4 +1,4 @@
-exports.calculateBudgetPlan = ({ income, savingsGoalRate = 0.5, categoriesData }) => {
+export const calculateBudgetPlan = ({ income, savingsGoalRate = 0.5, categoriesData }) => {
   // Income and amounts should be in standard units (e.g., rupees), not paise.
   const requiredSavings = income * savingsGoalRate;
   let availableSpending = income - requiredSavings;

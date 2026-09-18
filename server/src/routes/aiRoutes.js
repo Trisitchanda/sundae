@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const aiController = require('../controllers/aiController');
-const { authenticate } = require('../middleware/auth');
+import * as aiController from '../controllers/aiController.js';
+import { authenticate } from '../middleware/auth.js';
 router.post('/analyze', authenticate, aiController.analyze);
 
-module.exports = router;
+export default router;

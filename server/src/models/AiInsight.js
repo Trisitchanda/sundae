@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const aiInsightSchema = new mongoose.Schema(
   {
@@ -20,4 +20,4 @@ aiInsightSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 // Compound index for quick lookup
 aiInsightSchema.index({ userId: 1, period: 1 });
 
-module.exports = mongoose.model('AiInsight', aiInsightSchema);
+export default mongoose.model('AiInsight', aiInsightSchema);
