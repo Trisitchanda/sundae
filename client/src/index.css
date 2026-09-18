@@ -1,0 +1,155 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --sundae-cream: #F7F3E8;
+    --sundae-cream-secondary: #EEE8D8;
+    --sundae-yellow: #E8D75A;
+    --sundae-ink: #171714;
+    --sundae-olive: #7C8060;
+    --sundae-coral: #C87855;
+
+    /* Font families */
+    --font-sans: 'Manrope', 'Inter', system-ui, sans-serif;
+    --font-serif: 'Newsreader', Georgia, serif;
+
+    /* Radii */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-full: 9999px;
+  }
+}
+
+@layer base {
+  *,
+  ::before,
+  ::after {
+    box-sizing: border-box;
+    border-color: var(--sundae-cream-secondary);
+  }
+
+  html {
+    background-color: var(--sundae-cream);
+    color: var(--sundae-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Optional grain texture via SVG data URL */
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+  }
+
+  body {
+    background-color: transparent;
+    color: var(--sundae-ink);
+    margin: 0;
+    min-height: 100vh;
+  }
+
+  /* Remove default button cursors across everything */
+  button, 
+  [role="button"],
+  input[type="submit"],
+  input[type="button"] {
+    cursor: pointer;
+  }
+
+  /* Financial numbers formatting */
+  .num-tabular {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer utilities {
+  .font-serif {
+    font-family: var(--font-serif);
+  }
+  .font-sans {
+    font-family: var(--font-sans);
+  }
+  .text-ink {
+    color: var(--sundae-ink);
+  }
+  .text-cream {
+    color: var(--sundae-cream);
+  }
+  .bg-cream {
+    background-color: var(--sundae-cream);
+  }
+  .bg-cream-secondary {
+    background-color: var(--sundae-cream-secondary);
+  }
+  .bg-yellow {
+    background-color: var(--sundae-yellow);
+  }
+  .bg-ink {
+    background-color: var(--sundae-ink);
+  }
+  .bg-coral {
+    background-color: var(--sundae-coral);
+  }
+  .text-coral {
+    color: var(--sundae-coral);
+  }
+  .border-cream-secondary {
+    border-color: var(--sundae-cream-secondary);
+  }
+  
+  /* Textures and borders */
+  .border-thin {
+    border-width: 1px;
+    border-color: var(--sundae-cream-secondary);
+  }
+}
+
+/* Custom minimal scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--sundae-cream-secondary);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--sundae-olive);
+}
+
+/* Dialog / Sheet Transitions */
+@keyframes sheetSlideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes modalFadeIn {
+  from {
+    transform: scale(0.98);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-sheet {
+  animation: sheetSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-modal {
+  animation: modalFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
