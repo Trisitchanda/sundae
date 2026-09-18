@@ -14,6 +14,21 @@ export const createTransactionSchema = {
     destinationAccountId: z.string().regex(objectIdPattern, 'Invalid Destination Account ID').optional().nullable(),
     originalTransactionId: z.string().regex(objectIdPattern, 'Invalid Original Transaction ID').optional().nullable(),
     notes: z.string().optional()
+  }).superRefine((data, ctx) => {
+    if (['EXPENSE', 'INCOME', 'REFUND'].includes(data.type) && !data.accountId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'accountId is required for this transaction type',
+        path: ['accountId']
+      });
+    }
+    if (data.type === 'TRANSFER' && (!data.sourceAccountId || !data.destinationAccountId)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Both sourceAccountId and destinationAccountId are required for TRANSFER',
+        path: ['sourceAccountId'] // pointing it generally
+      });
+    }
   })
 };
 

@@ -7,7 +7,7 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "seed": "node src/seed.js",
-    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest"
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --runInBand"
   },
   "keywords": [],
   "author": "",

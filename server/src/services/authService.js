@@ -14,6 +14,9 @@ const logSecurityEvent = async (userId, event, ip, userAgent) => {
   }
 };
 
+import Category from '../models/Category.js';
+import Account from '../models/Account.js';
+
 const registerUser = async (email, password, ip, userAgent) => {
   if (process.env.ALLOW_REGISTRATION !== 'true') {
     const userCount = await User.countDocuments();
@@ -35,6 +38,22 @@ const registerUser = async (email, password, ip, userAgent) => {
     passwordHash,
     role: 'USER', // First user could be made ADMIN, but keeping simple for now
   });
+
+  // Create default Account and Categories
+  await Account.create({
+    userId: user._id,
+    name: 'Main Bank Account',
+    type: 'BANK',
+    balance: 0,
+    isDefault: true
+  });
+
+  const defaultCategories = ['Food', 'Transport', 'Utilities', 'Salary', 'Entertainment'].map(name => ({
+    userId: user._id,
+    name,
+    isDefault: false
+  }));
+  await Category.insertMany(defaultCategories);
 
   await logSecurityEvent(user._id, 'ACCOUNT_CREATED', ip, userAgent);
   return user;

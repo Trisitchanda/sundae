@@ -4,10 +4,14 @@ export const validate = (schema) => (req, res, next) => {
       req.body = schema.body.parse(req.body);
     }
     if (schema.query) {
-      req.query = schema.query.parse(req.query);
+      const parsed = schema.query.parse(req.query);
+      for (const key of Object.keys(req.query)) delete req.query[key];
+      Object.assign(req.query, parsed);
     }
     if (schema.params) {
-      req.params = schema.params.parse(req.params);
+      const parsed = schema.params.parse(req.params);
+      for (const key of Object.keys(req.params)) delete req.params[key];
+      Object.assign(req.params, parsed);
     }
     next();
   } catch (error) {

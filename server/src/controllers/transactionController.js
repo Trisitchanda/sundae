@@ -4,9 +4,9 @@ import Category from '../models/Category.js';
 import AppError from '../utils/AppError.js';
 
 // Helper to update account balance based on transaction logic
-const updateAccountBalance = async (accountId, amount, isDeduction, session) => {
+const updateAccountBalance = async (accountId, amount, isDeduction) => {
   if (!accountId) return;
-  const account = await Account.findById(accountId).session(session);
+  const account = await Account.findById(accountId);
   if (!account) return;
   
   const isCC = account.type === 'CREDIT_CARD';
@@ -19,7 +19,7 @@ const updateAccountBalance = async (accountId, amount, isDeduction, session) => 
   }
   
   account.balance += change;
-  await account.save({ session });
+  await account.save();
 };
 
 export const getTransactions = async (req, res, next) => {
@@ -74,8 +74,6 @@ export const getTransactions = async (req, res, next) => {
 };
 
 export const createTransaction = async (req, res, next) => {
-  const session = await Transaction.startSession();
-  session.startTransaction();
   try {
     const { type, amount, date, description, categoryId, accountId, sourceAccountId, destinationAccountId, originalTransactionId, notes } = req.body;
     
@@ -116,32 +114,25 @@ export const createTransaction = async (req, res, next) => {
       destinationAccountId,
       originalTransactionId,
       notes
-    }], { session });
+    }]);
 
     // Apply balances
     if (type === 'EXPENSE') {
-      await updateAccountBalance(accountId, parseInt(amount), true, session);
+      await updateAccountBalance(accountId, parseInt(amount), true);
     } else if (type === 'INCOME' || type === 'REFUND') {
-      await updateAccountBalance(accountId, parseInt(amount), false, session);
+      await updateAccountBalance(accountId, parseInt(amount), false);
     } else if (type === 'TRANSFER') {
-      await updateAccountBalance(sourceAccountId, parseInt(amount), true, session);
-      await updateAccountBalance(destinationAccountId, parseInt(amount), false, session);
+      await updateAccountBalance(sourceAccountId, parseInt(amount), true);
+      await updateAccountBalance(destinationAccountId, parseInt(amount), false);
     }
-    
-    await session.commitTransaction();
-    session.endSession();
     
     res.status(201).json({ success: true, data: transaction[0] });
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
     next(error);
   }
 };
 
 export const deleteTransaction = async (req, res, next) => {
-  const session = await Transaction.startSession();
-  session.startTransaction();
   try {
     const transaction = await Transaction.findOne({ _id: req.params.id, userId: req.user.id });
     if (!transaction) {
@@ -151,23 +142,18 @@ export const deleteTransaction = async (req, res, next) => {
     // Reverse balances
     const amount = transaction.amount;
     if (transaction.type === 'EXPENSE') {
-      await updateAccountBalance(transaction.accountId, amount, false, session);
+      await updateAccountBalance(transaction.accountId, amount, false);
     } else if (transaction.type === 'INCOME' || transaction.type === 'REFUND') {
-      await updateAccountBalance(transaction.accountId, amount, true, session);
+      await updateAccountBalance(transaction.accountId, amount, true);
     } else if (transaction.type === 'TRANSFER') {
-      await updateAccountBalance(transaction.sourceAccountId, amount, false, session);
-      await updateAccountBalance(transaction.destinationAccountId, amount, true, session);
+      await updateAccountBalance(transaction.sourceAccountId, amount, false);
+      await updateAccountBalance(transaction.destinationAccountId, amount, true);
     }
     
-    await Transaction.deleteOne({ _id: req.params.id }, { session });
-    
-    await session.commitTransaction();
-    session.endSession();
+    await Transaction.deleteOne({ _id: req.params.id });
     
     res.json({ success: true, message: 'Transaction deleted' });
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
     next(error);
   }
 };
