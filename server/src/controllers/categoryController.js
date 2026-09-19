@@ -11,14 +11,28 @@ export const getCategories = async (req, res, next) => {
     }).sort({ name: 1 }).lean();
 
     const user = await User.findById(req.user.id);
-    const budgets = user.categoryBudgets || new Map();
+    const budgets = user?.categoryBudgets || new Map();
 
     const mappedCategories = categories.map(cat => ({
       ...cat,
       budgetLimit: budgets.has(cat._id.toString()) ? budgets.get(cat._id.toString()) : null
     }));
 
-    res.json({ success: true, data: mappedCategories });
+    // Deduplicate by name (case-insensitive); prioritize user-specific category if both exist
+    const categoryMap = new Map();
+    for (const cat of mappedCategories) {
+      const normalizedName = cat.name.trim().toLowerCase();
+      if (!categoryMap.has(normalizedName)) {
+        categoryMap.set(normalizedName, cat);
+      } else {
+        const existing = categoryMap.get(normalizedName);
+        if (!cat.isDefault && existing.isDefault) {
+          categoryMap.set(normalizedName, cat);
+        }
+      }
+    }
+
+    res.json({ success: true, data: Array.from(categoryMap.values()) });
   } catch (error) {
     next(error);
   }
@@ -27,7 +41,18 @@ export const getCategories = async (req, res, next) => {
 export const createCategory = async (req, res, next) => {
   try {
     const { name } = req.body;
-    const category = await Category.create({ userId: req.user.id, name });
+    const trimmedName = name.trim();
+
+    // Check if category already exists either as a default or for this user (case-insensitive)
+    const existing = await Category.findOne({
+      name: { $regex: new RegExp(`^${trimmedName}$`, 'i') },
+      $or: [{ userId: req.user.id }, { isDefault: true }]
+    });
+    if (existing) {
+      return next(new AppError('Category already exists', 400));
+    }
+
+    const category = await Category.create({ userId: req.user.id, name: trimmedName });
     
     // Invalidate AI cache and Redis categories cache
     await AiInsight.updateMany({ userId: req.user.id }, { $set: { isStale: true } });
