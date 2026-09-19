@@ -8,6 +8,7 @@ import { errorHandler } from './middleware/errorHandler.js';
 import { csrfProtection } from './middleware/csrf.js';
 
 import authRoutes from './routes/authRoutes.js';
+import healthRoutes from './routes/healthRoutes.js';
 import categoryRoutes from './routes/categoryRoutes.js';
 import analyticsRoutes from './routes/analyticsRoutes.js';
 import settingsRoutes from './routes/settingsRoutes.js';
@@ -41,10 +42,11 @@ app.use(cors({
   exposedHeaders: ['X-CSRF-Token'],
 }));
 
-// Rate Limiting
+// Rate Limiting (skip health checks)
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5000, // increased for local development
+  skip: (req) => req.path === '/health' || req.path === '/api/health',
 });
 app.use('/api', limiter);
 
@@ -53,8 +55,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser(process.env.COOKIE_SECRET)); // signed cookies support if needed
 
-// Logging
-app.use(morgan('dev'));
+// Logging (skip frequent health checks to avoid polluting logs)
+app.use(morgan('dev', {
+  skip: (req) => req.path === '/health' || req.path === '/api/health',
+}));
 
 // CSRF Protection (Global for safe methods, mutations check it)
 // We apply this globally so the GET /api/csrf-token endpoint isn't needed - 
@@ -66,9 +70,8 @@ app.get('/', (req, res) => {
   res.json({ message: 'Sundae API is online and running.', status: 'healthy' });
 });
 
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
+app.use('/health', healthRoutes);
+app.use('/api/health', healthRoutes);
 
 // Routes
 app.use('/api/auth', authRoutes);
