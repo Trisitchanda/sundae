@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, useScroll, useTransform, useInView, useSpring, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { motion, useScroll, useTransform, useInView, useSpring, AnimatePresence, useReducedMotion, useMotionValueEvent } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Menu, X, ArrowRight, Activity, PieChart, Zap, CreditCard, LayoutDashboard } from 'lucide-react';
@@ -461,156 +461,368 @@ const ProductShowcase = () => {
   );
 };
 
-// 5. Feature Journey (Asymmetric, unique layouts)
+// 5. Cinematic Feature Journey (Numa-Inspired Minimalist Showcase)
 const FeatureJourney = () => {
-  const reducedMotion = useReducedMotion();
+  const containerRef = useRef(null);
+  const [activeTab, setActiveTab] = useState(0);
+
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end end"]
+  });
+
+  // Track active chapter as user scrolls through the 300vh container
+  useMotionValueEvent(scrollYProgress, "change", (latest) => {
+    let next = 0;
+    if (latest >= 0.75) next = 3;
+    else if (latest >= 0.50) next = 2;
+    else if (latest >= 0.25) next = 1;
+    setActiveTab((prev) => (prev !== next ? next : prev));
+  });
+
+  const handleSelectTab = (index) => {
+    setActiveTab(index);
+    if (containerRef.current) {
+      const top = containerRef.current.offsetTop;
+      const height = containerRef.current.offsetHeight;
+      const targetScroll = top + (index / 3.2) * (height - window.innerHeight);
+      window.scrollTo({ top: targetScroll, behavior: 'smooth' });
+    }
+  };
+
+  const chapters = [
+    {
+      id: "convergence",
+      num: "01",
+      name: "Convergence",
+      title: "All in one.",
+      desc: "Bank accounts, cards, and cash. Automatically synced into one clean view."
+    },
+    {
+      id: "guardrails",
+      num: "02",
+      name: "Guardrails",
+      title: "Smart limits.",
+      desc: "Visual caps that keep your spending in check without checking spreadsheets."
+    },
+    {
+      id: "analytics",
+      num: "03",
+      name: "Analytics",
+      title: "Clean breakdown.",
+      desc: "Instant visual flow of your capital. Clear categories, zero manual math."
+    },
+    {
+      id: "intelligence",
+      num: "04",
+      name: "Intelligence",
+      title: "Instant signals.",
+      desc: "Quiet alerts for unusual spikes, double charges, and price shifts."
+    }
+  ];
+
   return (
-    <section id="features" className="py-40 px-6 bg-ink text-cream overflow-hidden">
-      <div className="max-w-6xl mx-auto space-y-40">
-        
-        {/* Feature 01: One View */}
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          <FadeUp>
-            <div className="space-y-8">
-              <div className="text-xs uppercase tracking-widest text-yellow">01 / Convergence</div>
-              <h3 className="font-serif text-5xl md:text-7xl leading-[0.9] tracking-tighter">Everything,<br/>in one place.</h3>
-              <p className="text-olive text-xl font-light">Disparate accounts, random expenses, and hidden transfers converging into a single source of truth.</p>
-            </div>
-          </FadeUp>
-          <div className="relative h-96 bg-[#171714] border border-[#2A2A25] rounded-3xl overflow-hidden flex items-center justify-center group">
-            {/* Visual: scattered things merging into center on hover */}
-            <div className="absolute inset-0 flex items-center justify-center p-8">
-              <div className="relative w-full max-w-sm h-full">
-                <div className="absolute left-0 top-1/4 w-32 h-12 bg-white/5 rounded-lg border border-white/10 group-hover:translate-x-12 group-hover:opacity-0 transition-all duration-700" />
-                <div className="absolute right-0 bottom-1/4 w-40 h-16 bg-white/5 rounded-lg border border-white/10 group-hover:-translate-x-12 group-hover:opacity-0 transition-all duration-700 delay-100" />
-                
-                <div className="absolute inset-0 flex flex-col justify-center items-center space-y-4 opacity-0 group-hover:opacity-100 transition-all duration-1000 scale-95 group-hover:scale-100">
-                  <div className="w-full h-12 bg-cream text-ink rounded-lg flex items-center px-4 font-serif text-lg shadow-xl">Bank Balance</div>
-                  <div className="w-full h-12 bg-white/10 border border-white/20 rounded-lg flex items-center px-4 font-serif text-lg">Credit Card</div>
-                  <div className="w-full h-12 bg-white/10 border border-white/20 rounded-lg flex items-center px-4 font-serif text-lg">Cash</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Feature 02: Budgets */}
-        <div className="grid lg:grid-cols-2 gap-16 items-center flex-col-reverse lg:flex-row-reverse">
-          <FadeUp>
-            <div className="space-y-8 lg:pl-16">
-              <div className="text-xs uppercase tracking-widest text-yellow">02 / Guardrails</div>
-              <h3 className="font-serif text-5xl md:text-7xl leading-[0.9] tracking-tighter">Budgets that<br/>make sense.</h3>
-              <p className="text-olive text-xl font-light">Set limits. Watch them visually fill up. Know exactly when to pull back and when to spend.</p>
-            </div>
-          </FadeUp>
-          <div className="relative h-96 bg-[#171714] border border-[#2A2A25] rounded-3xl overflow-hidden flex items-center justify-center group">
-            <div className="w-full max-w-md px-12">
-              <div className="flex justify-between text-xs tracking-widest uppercase mb-4 text-olive">
-                <span>Spent</span>
-                <span>Limit</span>
-              </div>
-              <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden relative">
-                <div className="absolute top-0 left-0 h-full w-0 bg-yellow group-hover:w-[75%] transition-all duration-1000 ease-out" />
-              </div>
-              <div className="flex justify-between mt-4">
-                <div className="font-serif text-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000 delay-300">₹15,000</div>
-                <div className="font-serif text-3xl text-olive">₹20,000</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Feature 03: Spending */}
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          <FadeUp>
-            <div className="space-y-8">
-              <div className="text-xs uppercase tracking-widest text-yellow">03 / Analytics</div>
-              <h3 className="font-serif text-5xl md:text-7xl leading-[0.9] tracking-tighter">Understand<br/>your spending.</h3>
-              <p className="text-olive text-xl font-light">No spreadsheets. Just clean, interactive visual representations of your capital allocation.</p>
-            </div>
-          </FadeUp>
-          <div className="relative h-96 bg-[#171714] border border-[#2A2A25] rounded-3xl overflow-hidden flex items-center justify-center p-8">
-            <div className="w-full flex flex-col space-y-2">
-              {[
-                { name: 'Food', w: 'w-[40%]', bg: 'bg-yellow' },
-                { name: 'Housing', w: 'w-[65%]', bg: 'bg-olive' },
-                { name: 'Transport', w: 'w-[20%]', bg: 'bg-coral' }
-              ].map((c, i) => (
-                <div key={i} className="group/item flex items-center space-x-4 cursor-pointer">
-                  <div className="w-24 text-right text-xs uppercase tracking-widest font-medium text-white/40 group-hover/item:text-white transition-colors">{c.name}</div>
-                  <div className="flex-1 h-12 bg-white/5 rounded-lg overflow-hidden group-hover/item:bg-white/10 transition-colors">
-                    <div className={`h-full ${c.w} ${c.bg} transform -translate-x-full group-hover/item:translate-x-0 transition-transform duration-500`} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Feature 04: AI */}
-        <div className="grid lg:grid-cols-2 gap-16 items-center flex-col-reverse lg:flex-row-reverse">
-          <FadeUp>
-            <div className="space-y-8 lg:pl-16">
-              <div className="text-xs uppercase tracking-widest text-yellow">04 / Intelligence</div>
-              <h3 className="font-serif text-5xl md:text-7xl leading-[0.9] tracking-tighter">AI that<br/>explains.</h3>
-              <p className="text-olive text-xl font-light">Sundae reads your ledger, identifies anomalies, and explains exactly why your numbers look the way they do.</p>
-            </div>
-          </FadeUp>
-          <div className="relative h-[450px] rounded-3xl overflow-hidden flex items-center justify-center group cursor-crosshair bg-ink border border-[#2A2A25]">
+    <section ref={containerRef} className="relative bg-[#11110F] text-[#F7F4EC] w-full font-sans">
+      {/* 300vh scroll track */}
+      <div className="h-[300vh] relative">
+        <div className="sticky top-0 h-screen w-full flex items-center justify-center px-6 lg:px-16 overflow-hidden">
+          
+          <div className="max-w-7xl mx-auto w-full flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-16 py-12">
             
-            {/* The "AI Core" - A massive blurred rotating gradient */}
-            <motion.div 
-              className="absolute w-96 h-96 bg-[conic-gradient(from_0deg,#F4CF68,#D4D386,#E88268,#F4CF68)] rounded-full blur-[80px] opacity-20 group-hover:opacity-40 transition-opacity duration-1000"
-              animate={reducedMotion ? {} : { rotate: 360 }}
-              transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-            />
-            
-            {/* Floating Panels */}
-            <div className="relative z-10 w-full max-w-sm">
-              
-              {/* Primary Data Card (Glassmorphic) */}
-              <motion.div 
-                whileHover={{ y: -5, rotateX: 5, rotateY: -5 }}
-                className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-2xl shadow-2xl relative mb-[-30px] ml-4 mr-12 z-10"
-              >
-                <div className="flex justify-between items-center mb-6">
-                  <div className="text-[10px] uppercase tracking-widest text-white/40 font-mono">Anomaly Detected</div>
-                  <div className="w-2 h-2 rounded-full bg-coral animate-pulse" />
+            {/* Left Column: Heading, Minimal Selector & Active Story */}
+            <div className="w-full lg:w-5/12 flex flex-col justify-between z-10">
+              <div>
+                {/* Minimal Kicker */}
+                <div className="text-[11px] uppercase tracking-[0.25em] text-[#E8D75A] font-mono mb-4 flex items-center space-x-2.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#E8D75A]" />
+                  <span>01 — 04 // THE FLOW</span>
                 </div>
-                <div className="font-serif text-3xl text-cream">Dining</div>
-                <div className="text-coral font-mono text-xl mt-1">▲ 18.4%</div>
-              </motion.div>
 
-              {/* AI Analysis Bubble */}
-              <motion.div 
-                whileHover={{ y: -5 }}
-                className="bg-white text-ink p-6 rounded-2xl shadow-2xl border border-cream-secondary relative ml-12 mr-4 z-20"
-              >
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-6 h-6 rounded bg-yellow flex items-center justify-center">
-                    <Zap className="w-3 h-3 text-ink" />
-                  </div>
-                  <div className="text-[10px] uppercase tracking-widest font-bold">Sundae Intelligence</div>
+                {/* Section Main Title with Modern Bold Sans */}
+                <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#F7F4EC] tracking-tight leading-[1.05] mb-8">
+                  Money, <br />
+                  <span className="text-[#E8D75A]">clarified.</span>
+                </h2>
+
+                {/* Minimal Tab Selector (Numa style, refined) */}
+                <div className="space-y-3 mb-10">
+                  {chapters.map((chapter, idx) => {
+                    const isActive = activeTab === idx;
+                    return (
+                      <button
+                        key={chapter.id}
+                        type="button"
+                        onClick={() => handleSelectTab(idx)}
+                        className="w-full flex items-center justify-between py-2 text-left group cursor-pointer transition-all outline-none"
+                      >
+                        <div className="flex items-center space-x-4">
+                          {/* Radio Dot indicator */}
+                          <div className={`w-4 h-4 rounded-full flex items-center justify-center transition-all duration-300 ${
+                            isActive 
+                              ? 'border border-[#E8D75A]' 
+                              : 'border border-white/20 group-hover:border-white/40'
+                          }`}>
+                            <motion.div 
+                              animate={{ scale: isActive ? 1 : 0 }}
+                              transition={{ type: "spring", stiffness: 450, damping: 28 }}
+                              className="w-1.5 h-1.5 rounded-full bg-[#E8D75A]"
+                            />
+                          </div>
+
+                          {/* Item Name */}
+                          <span className={`text-sm tracking-wider font-mono uppercase transition-colors duration-300 ${
+                            isActive 
+                              ? 'text-[#F7F4EC] font-semibold' 
+                              : 'text-white/40 group-hover:text-white/70'
+                          }`}>
+                            {chapter.num} &nbsp;{chapter.name}
+                          </span>
+                        </div>
+
+                        {/* Subtle arrow indicator for active state */}
+                        <span className={`text-xs font-mono transition-opacity duration-300 ${isActive ? 'opacity-100 text-[#E8D75A]' : 'opacity-0'}`}>
+                          →
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
-                
-                {/* Typewriter reveal */}
-                <div className="relative overflow-hidden">
-                  <motion.div 
-                    initial={{ clipPath: 'inset(0 100% 0 0)' }}
-                    whileInView={{ clipPath: 'inset(0 0% 0 0)' }}
-                    viewport={{ once: true, margin: "-100px" }}
-                    transition={{ duration: 1.5, ease: "circOut", delay: 0.2 }}
-                    className="text-sm font-medium leading-relaxed"
+              </div>
+
+              {/* Active Chapter Details */}
+              <div className="min-h-[100px] pt-6 border-t border-white/[0.08]">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeTab}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.25, ease: "easeOut" }}
                   >
-                    Found 4 unusually large weekend transactions. <br/><br/>
-                    <span className="text-ink/60 font-serif italic text-base">"Consider adjusting your weekday limits to balance the ledger."</span>
+                    <h3 className="text-2xl sm:text-3xl font-bold text-[#F7F4EC] mb-2 tracking-tight">
+                      {chapters[activeTab].title}
+                    </h3>
+                    <p className="text-white/50 text-sm sm:text-base font-normal leading-relaxed max-w-sm">
+                      {chapters[activeTab].desc}
+                    </p>
                   </motion.div>
-                </div>
-              </motion.div>
+                </AnimatePresence>
+              </div>
             </div>
-          </div>
-        </div>
 
+            {/* Right Column: Sleek Matte Hardware Card */}
+            <div className="w-full lg:w-7/12 flex items-center justify-center z-10">
+              <div className="w-full max-w-xl aspect-[16/11] bg-[#141412] border border-white/[0.08] rounded-[2rem] shadow-2xl overflow-hidden relative">
+                
+                {/* Ambient vignette */}
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(232,215,90,0.06),_transparent_60%)] pointer-events-none" />
+
+                <AnimatePresence mode="wait">
+                  {activeTab === 0 && (
+                    <motion.div
+                      key="convergence"
+                      initial={{ opacity: 0, scale: 0.98 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.98 }}
+                      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                      className="h-full flex flex-col justify-between p-8 lg:p-10 relative"
+                    >
+                      <div className="flex items-center justify-between border-b border-white/[0.06] pb-4">
+                        <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-white/40">01 / BALANCES</span>
+                        <span className="font-mono text-[11px] text-[#E8D75A] flex items-center space-x-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#E8D75A] animate-pulse" />
+                          <span>LIVE</span>
+                        </span>
+                      </div>
+
+                      <div className="my-auto py-2">
+                        <div className="text-[11px] uppercase tracking-[0.2em] font-mono text-white/40 mb-1">Total Position</div>
+                        <div className="text-4xl sm:text-5xl font-bold text-[#F7F4EC] tracking-tight flex items-baseline space-x-3">
+                          <span>₹1,65,200</span>
+                          <span className="font-mono text-xs font-normal text-[#E8D75A] tracking-normal">↑ 8.4%</span>
+                        </div>
+
+                        <div className="space-y-2.5 mt-6 pt-5 border-t border-white/[0.06]">
+                          {[
+                            { name: "Primary Checking", balance: "₹1,24,500", tag: "Synced" },
+                            { name: "Credit Facility", balance: "−₹28,300", tag: "Due 7d" },
+                            { name: "Liquid Reserve", balance: "₹12,400", tag: "Available" }
+                          ].map((item, i) => (
+                            <div key={i} className="flex items-center justify-between py-1 text-xs font-mono">
+                              <span className="text-white/60">{item.name}</span>
+                              <div className="flex items-center space-x-3">
+                                <span className="text-[#F7F4EC] font-semibold">{item.balance}</span>
+                                <span className="text-[10px] text-white/30 w-14 text-right">{item.tag}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="text-[11px] font-mono text-white/30 flex items-center justify-between border-t border-white/[0.06] pt-3">
+                        <span>3 accounts connected</span>
+                        <span>Auto-synced</span>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {activeTab === 1 && (
+                    <motion.div
+                      key="guardrails"
+                      initial={{ opacity: 0, scale: 0.98 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.98 }}
+                      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                      className="h-full flex flex-col justify-between p-8 lg:p-10 relative"
+                    >
+                      <div className="flex items-center justify-between border-b border-white/[0.06] pb-4">
+                        <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-white/40">02 / GUARDRAIL</span>
+                        <span className="font-mono text-[11px] text-[#E8D75A]">75% PACED</span>
+                      </div>
+
+                      <div className="my-auto py-2">
+                        <div className="text-[11px] uppercase tracking-[0.2em] font-mono text-white/40 mb-1">Monthly Ceiling</div>
+                        <div className="text-4xl sm:text-5xl font-bold text-[#F7F4EC] tracking-tight">
+                          ₹15,000 <span className="text-white/30 text-2xl font-normal">/ ₹20,000</span>
+                        </div>
+
+                        {/* Minimal Progress Track */}
+                        <div className="h-1.5 w-full bg-white/[0.08] rounded-full overflow-hidden mt-6 relative">
+                          <motion.div 
+                            initial={{ width: 0 }}
+                            animate={{ width: "75%" }}
+                            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                            className="h-full bg-gradient-to-r from-[#E8D75A] to-[#E88268] rounded-full"
+                          />
+                        </div>
+
+                        <div className="flex justify-between items-center mt-2.5 text-[11px] font-mono text-white/40">
+                          <span>₹0</span>
+                          <span className="text-[#E8D75A]">₹5,000 safe margin</span>
+                          <span>₹20,000</span>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-3 mt-6 pt-5 border-t border-white/[0.06]">
+                          {[
+                            { name: "Dining", spend: "₹6,200" },
+                            { name: "Living", spend: "₹5,400" },
+                            { name: "Transit", spend: "₹3,400" }
+                          ].map((cat, i) => (
+                            <div key={i} className="text-xs font-mono">
+                              <div className="text-[10px] text-white/40 uppercase">{cat.name}</div>
+                              <div className="text-[#F7F4EC] font-semibold mt-0.5">{cat.spend}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="text-[11px] font-mono text-white/30 flex items-center justify-between border-t border-white/[0.06] pt-3">
+                        <span>11 days remaining</span>
+                        <span>Within safe limit</span>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {activeTab === 2 && (
+                    <motion.div
+                      key="analytics"
+                      initial={{ opacity: 0, scale: 0.98 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.98 }}
+                      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                      className="h-full flex flex-col justify-between p-8 lg:p-10 relative"
+                    >
+                      <div className="flex items-center justify-between border-b border-white/[0.06] pb-4">
+                        <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-white/40">03 / ALLOCATION</span>
+                        <span className="font-mono text-[11px] text-white/40">MAY 2026</span>
+                      </div>
+
+                      <div className="my-auto py-2">
+                        {/* Segmented Distribution Strip */}
+                        <div className="flex h-2 w-full rounded-full overflow-hidden bg-white/[0.08] mb-6 space-x-1">
+                          <div className="w-[40%] bg-[#E8D75A] rounded-full" />
+                          <div className="w-[30%] bg-[#7C8060] rounded-full" />
+                          <div className="w-[18%] bg-[#C87855] rounded-full" />
+                          <div className="w-[12%] bg-[#F7F3E8] rounded-full" />
+                        </div>
+
+                        <div className="space-y-2.5">
+                          {[
+                            { name: "Dining & Social", pct: "40%", val: "₹18,400", dot: "bg-[#E8D75A]" },
+                            { name: "Living & Space", pct: "30%", val: "₹14,200", dot: "bg-[#7C8060]" },
+                            { name: "Movement & Fuel", pct: "18%", val: "₹8,400", dot: "bg-[#C87855]" },
+                            { name: "Core Reserve", pct: "12%", val: "₹5,600", dot: "bg-[#F7F3E8]" }
+                          ].map((item, i) => (
+                            <div key={i} className="flex items-center justify-between text-xs font-mono py-1 border-b border-white/[0.03]">
+                              <div className="flex items-center space-x-2.5">
+                                <span className={`w-1.5 h-1.5 rounded-full ${item.dot}`} />
+                                <span className="text-white/70">{item.name}</span>
+                              </div>
+                              <div className="flex items-center space-x-4">
+                                <span className="text-white/40 text-[11px]">{item.pct}</span>
+                                <span className="text-[#F7F4EC] font-semibold">{item.val}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="text-[11px] font-mono text-white/30 flex items-center justify-between border-t border-white/[0.06] pt-3">
+                        <span>4 categories</span>
+                        <span>Zero manual math</span>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {activeTab === 3 && (
+                    <motion.div
+                      key="intelligence"
+                      initial={{ opacity: 0, scale: 0.98 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.98 }}
+                      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                      className="h-full flex flex-col justify-between p-8 lg:p-10 relative"
+                    >
+                      <div className="flex items-center justify-between border-b border-white/[0.06] pb-4">
+                        <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#E8D75A]">04 / SIGNAL</span>
+                        <span className="font-mono text-[11px] text-[#E8D75A] flex items-center space-x-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#E8D75A] animate-pulse" />
+                          <span>TODAY</span>
+                        </span>
+                      </div>
+
+                      <div className="my-auto py-2">
+                        <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/[0.08] relative">
+                          <div className="text-[10px] uppercase tracking-[0.2em] font-mono text-[#E8D75A] mb-2">Notice</div>
+                          <div className="text-2xl sm:text-3xl font-bold text-[#F7F4EC] tracking-tight">
+                            Dining is up <span className="text-[#E8D75A]">18%</span> this week
+                          </div>
+                          
+                          <p className="text-white/50 text-sm sm:text-base mt-2 leading-relaxed font-normal">
+                            Three weekend outings totaled ₹4,280 outside typical pacing.
+                          </p>
+
+                          <div className="mt-5 pt-3 border-t border-white/[0.06] flex items-center justify-between text-[11px] font-mono">
+                            <span className="text-white/40">Buffer: Safe</span>
+                            <span className="text-[#E8D75A]">Pacing adjusted →</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="text-[11px] font-mono text-white/30 flex items-center justify-between border-t border-white/[0.06] pt-3">
+                        <span>Autonomous detection</span>
+                        <span>No rules to configure</span>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+              </div>
+            </div>
+
+          </div>
+
+        </div>
       </div>
     </section>
   );

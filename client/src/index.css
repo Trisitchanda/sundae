@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+@theme {
+  --font-display: 'Plus Jakarta Sans', 'Outfit', system-ui, sans-serif;
+  --font-serif: 'Newsreader', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+}
+
 @layer base {
   :root {
     --sundae-cream: #F7F3E8;
@@ -10,8 +16,9 @@
     --sundae-coral: #C87855;
 
     /* Font families */
-    --font-sans: 'Manrope', 'Inter', system-ui, sans-serif;
+    --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
     --font-serif: 'Newsreader', Georgia, serif;
+    --font-display: 'Plus Jakarta Sans', 'Outfit', system-ui, sans-serif;
 
     /* Radii */
     --radius-sm: 6px;
@@ -63,6 +70,9 @@
 }
 
 @layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
   .font-serif {
     font-family: var(--font-serif);
   }
