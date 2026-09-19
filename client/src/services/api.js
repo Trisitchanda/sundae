@@ -1,7 +1,9 @@
 import axios from 'axios';
 
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/+$/, '');
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: API_BASE_URL,
   withCredentials: true,
 });
 
@@ -38,7 +40,8 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     
-    if (error.response?.status === 401 && !originalRequest._retry && originalRequest.url !== '/auth/refresh' && originalRequest.url !== '/auth/login') {
+    const isAuthEndpoint = originalRequest.url?.includes('/auth/refresh') || originalRequest.url?.includes('/auth/login');
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       if (isRefreshing) {
         return new Promise(function(resolve, reject) {
           failedQueue.push({ resolve, reject });
@@ -53,7 +56,7 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        await axios.post('/api/auth/refresh', {}, { withCredentials: true });
+        await axios.post(`${API_BASE_URL}/auth/refresh`, {}, { withCredentials: true });
         isRefreshing = false;
         processQueue(null);
         return api(originalRequest);

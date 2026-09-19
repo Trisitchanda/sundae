@@ -52,6 +52,7 @@ Monea implements a strict security model appropriate for financial data:
 
 ## Environment Setup
 
+### Backend (`server/.env`)
 Create a `.env` file in the `server` directory based on `.env.example`:
 
 ```env
@@ -62,6 +63,13 @@ JWT_SECRET=your_super_secret_jwt_key
 COOKIE_SECRET=your_super_secret_cookie_key
 CLIENT_URL=http://localhost:5173
 ALLOW_REGISTRATION=true
+```
+
+### Frontend (`client/.env`)
+Optional for local development (defaults to `/api` via Vite's proxy). For custom backend deployments, create a `.env` file in the `client` directory based on `client/.env.example`:
+
+```env
+VITE_API_BASE_URL=/api
 ```
 
 ## Running Locally
