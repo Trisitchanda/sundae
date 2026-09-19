@@ -5,11 +5,13 @@ import { csrfProtection } from '../middleware/csrf.js';
 import { validate } from '../middleware/validate.js';
 import { createCategorySchema, updateCategorySchema } from '../schemas/category.schemas.js';
 
+import { cacheMiddleware } from '../middleware/cacheMiddleware.js';
+
 const router = express.Router();
 
 router.use(authenticate);
 
-router.get('/', categoryController.getCategories);
+router.get('/', cacheMiddleware('categories', 3600), categoryController.getCategories);
 router.post('/', csrfProtection, validate(createCategorySchema), categoryController.createCategory);
 router.put('/:id', csrfProtection, validate(updateCategorySchema), categoryController.updateCategory);
 

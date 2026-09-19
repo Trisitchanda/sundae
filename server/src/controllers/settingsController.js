@@ -1,6 +1,7 @@
 import User from '../models/User.js';
 import AiInsight from '../models/AiInsight.js';
 import AppError from '../utils/AppError.js';
+import { invalidateUserCache } from '../middleware/cacheMiddleware.js';
 
 export const updateIncome = async (req, res, next) => {
   try {
@@ -14,6 +15,8 @@ export const updateIncome = async (req, res, next) => {
     if (!user) {
       return next(new AppError('User not found', 404));
     }
+
+    await invalidateUserCache(req.user.id, 'analytics');
 
     res.json({ success: true, data: user });
   } catch (error) {
@@ -36,8 +39,9 @@ export const updateSavingsGoal = async (req, res, next) => {
       return next(new AppError('User not found', 404));
     }
 
-    // Invalidate AI cache
+    // Invalidate AI cache and Redis analytics cache
     await AiInsight.updateMany({ userId: req.user.id }, { $set: { isStale: true } });
+    await invalidateUserCache(req.user.id, 'analytics');
 
     res.json({ success: true, data: user });
   } catch (error) {

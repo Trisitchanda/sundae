@@ -2,6 +2,7 @@ import Transaction from '../models/Transaction.js';
 import Account from '../models/Account.js';
 import Category from '../models/Category.js';
 import AppError from '../utils/AppError.js';
+import { invalidateUserCache } from '../middleware/cacheMiddleware.js';
 
 // Helper to update account balance based on transaction logic
 const updateAccountBalance = async (accountId, amount, isDeduction) => {
@@ -126,6 +127,9 @@ export const createTransaction = async (req, res, next) => {
       await updateAccountBalance(destinationAccountId, parseInt(amount), false);
     }
     
+    // Invalidate caches for user
+    await invalidateUserCache(req.user.id, 'transactions', 'analytics', 'accounts');
+
     res.status(201).json({ success: true, data: transaction[0] });
   } catch (error) {
     next(error);
@@ -152,6 +156,9 @@ export const deleteTransaction = async (req, res, next) => {
     
     await Transaction.deleteOne({ _id: req.params.id });
     
+    // Invalidate caches for user
+    await invalidateUserCache(req.user.id, 'transactions', 'analytics', 'accounts');
+
     res.json({ success: true, message: 'Transaction deleted' });
   } catch (error) {
     next(error);

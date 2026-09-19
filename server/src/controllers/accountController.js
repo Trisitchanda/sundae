@@ -1,4 +1,5 @@
 import Account from '../models/Account.js';
+import { invalidateUserCache } from '../middleware/cacheMiddleware.js';
 
 export const getAccounts = async (req, res, next) => {
   try {
@@ -20,6 +21,8 @@ export const createAccount = async (req, res, next) => {
       creditLimit: creditLimit || null
     });
     
+    await invalidateUserCache(req.user.id, 'accounts');
+
     res.status(201).json({ success: true, data: account });
   } catch (error) {
     next(error);

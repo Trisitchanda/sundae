@@ -21,6 +21,8 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
+let memoryCsrfToken = null;
+
 function getCookie(name) {
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
@@ -28,7 +30,7 @@ function getCookie(name) {
 }
 
 api.interceptors.request.use((config) => {
-  const csrfToken = getCookie('XSRF-TOKEN');
+  const csrfToken = memoryCsrfToken || getCookie('XSRF-TOKEN');
   if (csrfToken) {
     config.headers['X-CSRF-Token'] = csrfToken;
   }
@@ -36,7 +38,13 @@ api.interceptors.request.use((config) => {
 });
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const token = response.headers?.['x-csrf-token'];
+    if (token) {
+      memoryCsrfToken = token;
+    }
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
     

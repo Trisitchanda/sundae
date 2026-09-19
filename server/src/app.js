@@ -38,6 +38,7 @@ app.use(cors({
     }
   },
   credentials: true,
+  exposedHeaders: ['X-CSRF-Token'],
 }));
 
 // Rate Limiting

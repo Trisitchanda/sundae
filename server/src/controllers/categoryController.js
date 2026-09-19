@@ -2,6 +2,7 @@ import Category from '../models/Category.js';
 import AiInsight from '../models/AiInsight.js';
 import User from '../models/User.js';
 import AppError from '../utils/AppError.js';
+import { invalidateUserCache } from '../middleware/cacheMiddleware.js';
 
 export const getCategories = async (req, res, next) => {
   try {
@@ -28,8 +29,9 @@ export const createCategory = async (req, res, next) => {
     const { name } = req.body;
     const category = await Category.create({ userId: req.user.id, name });
     
-    // Invalidate AI cache
+    // Invalidate AI cache and Redis categories cache
     await AiInsight.updateMany({ userId: req.user.id }, { $set: { isStale: true } });
+    await invalidateUserCache(req.user.id, 'categories');
 
     res.status(201).json({ success: true, data: { ...category.toObject(), budgetLimit: null } });
   } catch (error) {
@@ -61,8 +63,9 @@ export const updateCategory = async (req, res, next) => {
 
     await user.save();
 
-    // Invalidate AI cache
+    // Invalidate AI cache and Redis caches
     await AiInsight.updateMany({ userId: req.user.id }, { $set: { isStale: true } });
+    await invalidateUserCache(req.user.id, 'categories', 'analytics');
 
     res.json({ success: true, data: { ...category.toObject(), budgetLimit } });
   } catch (error) {
