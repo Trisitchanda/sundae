@@ -4,16 +4,20 @@ const csrfProtection = (req, res, next) => {
   if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
     if (!req.cookies._csrf) {
       const token = crypto.randomBytes(32).toString('hex');
-      res.cookie('_csrf', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+      const isProduction = process.env.NODE_ENV === 'production';
+      const cookieOptions = {
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax',
         maxAge: 24 * 60 * 60 * 1000,
+      };
+
+      res.cookie('_csrf', token, {
+        ...cookieOptions,
+        httpOnly: true,
       });
       res.cookie('XSRF-TOKEN', token, {
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 24 * 60 * 60 * 1000,
+        ...cookieOptions,
+        httpOnly: false,
       });
     }
     return next();

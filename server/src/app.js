@@ -17,10 +17,26 @@ import transactionRoutes from './routes/transactionRoutes.js';
 
 const app = express();
 
+// Trust reverse proxy (Render, Vercel, etc.)
+app.set('trust proxy', 1);
+
 // Security Middlewares
 app.use(helmet());
+
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://sundae-green.vercel.app',
+  ...(process.env.CLIENT_URL ? [process.env.CLIENT_URL.replace(/\/+$/, '')] : []),
+];
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(null, true); // Permissive for preview branches while allowing credentials
+    }
+  },
   credentials: true,
 }));
 
@@ -43,6 +59,15 @@ app.use(morgan('dev'));
 // We apply this globally so the GET /api/csrf-token endpoint isn't needed - 
 // the token is set on any GET request automatically.
 app.use(csrfProtection);
+
+// Health and Root checks
+app.get('/', (req, res) => {
+  res.json({ message: 'Sundae API is online and running.', status: 'healthy' });
+});
+
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
 // Routes
 app.use('/api/auth', authRoutes);

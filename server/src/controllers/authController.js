@@ -1,18 +1,25 @@
 import * as authService from '../services/authService.js';
 import User from '../models/User.js';
 
+const isProduction = process.env.NODE_ENV === 'production';
+
+const getCookieOptions = () => ({
+  secure: isProduction,
+  sameSite: isProduction ? 'none' : 'lax',
+});
+
 const setCookies = (res, accessToken, refreshToken) => {
+  const baseOptions = getCookieOptions();
+
   res.cookie('accessToken', accessToken, {
+    ...baseOptions,
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
     maxAge: 15 * 60 * 1000, // 15 min
   });
 
   res.cookie('refreshToken', refreshToken, {
+    ...baseOptions,
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
     path: '/api/auth/refresh', // only sent on refresh endpoint
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
@@ -61,8 +68,9 @@ export const logout = async (req, res, next) => {
     const refreshToken = req.cookies.refreshToken;
     await authService.logoutUser(refreshToken, req.user?.id, req.ip, req.headers['user-agent']);
     
-    res.clearCookie('accessToken');
-    res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
+    const cookieOptions = getCookieOptions();
+    res.clearCookie('accessToken', cookieOptions);
+    res.clearCookie('refreshToken', { ...cookieOptions, path: '/api/auth/refresh' });
     res.status(200).json({ success: true, message: 'Logged out successfully' });
   } catch (error) {
     next(error);
@@ -88,8 +96,9 @@ export const changePassword = async (req, res, next) => {
     await authService.changePassword(req.user.id, currentPassword, newPassword, req.ip, req.headers['user-agent']);
     
     // Revoke current session cookies since all sessions were revoked
-    res.clearCookie('accessToken');
-    res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
+    const cookieOptions = getCookieOptions();
+    res.clearCookie('accessToken', cookieOptions);
+    res.clearCookie('refreshToken', { ...cookieOptions, path: '/api/auth/refresh' });
     
     res.status(200).json({ success: true, message: 'Password changed successfully. Please log in again.' });
   } catch (error) {
