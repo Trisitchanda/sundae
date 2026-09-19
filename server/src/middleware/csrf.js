@@ -23,6 +23,11 @@ const csrfProtection = (req, res, next) => {
     return next();
   }
 
+  // Exempt initial auth endpoints (protected by credentials and rate limiting)
+  if (req.path.endsWith('/login') || req.path.endsWith('/register') || req.path.endsWith('/refresh')) {
+    return next();
+  }
+
   const csrfCookie = req.cookies._csrf;
   const csrfHeader = req.headers['x-xsrf-token'] || req.headers['x-csrf-token'];
   
