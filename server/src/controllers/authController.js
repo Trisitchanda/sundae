@@ -1,15 +1,18 @@
 import * as authService from '../services/authService.js';
 import User from '../models/User.js';
 
-const isProduction = process.env.NODE_ENV === 'production';
+const isProduction = process.env.NODE_ENV?.toLowerCase() === 'production' || process.env.RENDER === 'true';
 
-const getCookieOptions = () => ({
-  secure: isProduction,
-  sameSite: isProduction ? 'none' : 'lax',
-});
+const getCookieOptions = (req) => {
+  const isSecure = isProduction || req?.secure || req?.headers?.['x-forwarded-proto'] === 'https';
+  return {
+    secure: isSecure,
+    sameSite: isSecure ? 'none' : 'lax',
+  };
+};
 
-const setCookies = (res, accessToken, refreshToken) => {
-  const baseOptions = getCookieOptions();
+const setCookies = (req, res, accessToken, refreshToken) => {
+  const baseOptions = getCookieOptions(req);
 
   res.cookie('accessToken', accessToken, {
     ...baseOptions,
@@ -40,7 +43,7 @@ export const login = async (req, res, next) => {
     const { email, password } = req.body;
     const { user, accessToken, refreshToken } = await authService.loginUser(email, password, req.ip, req.headers['user-agent']);
     
-    setCookies(res, accessToken, refreshToken);
+    setCookies(req, res, accessToken, refreshToken);
     
     res.status(200).json({ success: true, data: { id: user._id, email: user.email, role: user.role } });
   } catch (error) {
@@ -53,12 +56,13 @@ export const refresh = async (req, res, next) => {
     const oldRefreshToken = req.cookies.refreshToken;
     const { accessToken, refreshToken } = await authService.refreshSession(oldRefreshToken, req.ip, req.headers['user-agent']);
     
-    setCookies(res, accessToken, refreshToken);
+    setCookies(req, res, accessToken, refreshToken);
     
     res.status(200).json({ success: true, message: 'Session refreshed' });
   } catch (error) {
-    res.clearCookie('accessToken');
-    res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
+    const cookieOptions = getCookieOptions(req);
+    res.clearCookie('accessToken', cookieOptions);
+    res.clearCookie('refreshToken', { ...cookieOptions, path: '/api/auth/refresh' });
     res.status(401).json({ success: false, message: 'Invalid or expired session' });
   }
 };
@@ -68,7 +72,7 @@ export const logout = async (req, res, next) => {
     const refreshToken = req.cookies.refreshToken;
     await authService.logoutUser(refreshToken, req.user?.id, req.ip, req.headers['user-agent']);
     
-    const cookieOptions = getCookieOptions();
+    const cookieOptions = getCookieOptions(req);
     res.clearCookie('accessToken', cookieOptions);
     res.clearCookie('refreshToken', { ...cookieOptions, path: '/api/auth/refresh' });
     res.status(200).json({ success: true, message: 'Logged out successfully' });
@@ -96,7 +100,7 @@ export const changePassword = async (req, res, next) => {
     await authService.changePassword(req.user.id, currentPassword, newPassword, req.ip, req.headers['user-agent']);
     
     // Revoke current session cookies since all sessions were revoked
-    const cookieOptions = getCookieOptions();
+    const cookieOptions = getCookieOptions(req);
     res.clearCookie('accessToken', cookieOptions);
     res.clearCookie('refreshToken', { ...cookieOptions, path: '/api/auth/refresh' });
     

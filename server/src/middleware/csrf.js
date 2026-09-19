@@ -4,10 +4,11 @@ const csrfProtection = (req, res, next) => {
   if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
     if (!req.cookies._csrf) {
       const token = crypto.randomBytes(32).toString('hex');
-      const isProduction = process.env.NODE_ENV === 'production';
+      const isProduction = process.env.NODE_ENV?.toLowerCase() === 'production' || process.env.RENDER === 'true';
+      const isSecure = isProduction || req.secure || req.headers['x-forwarded-proto'] === 'https';
       const cookieOptions = {
-        secure: isProduction,
-        sameSite: isProduction ? 'none' : 'lax',
+        secure: isSecure,
+        sameSite: isSecure ? 'none' : 'lax',
         maxAge: 24 * 60 * 60 * 1000,
       };
 
