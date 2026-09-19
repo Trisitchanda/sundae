@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { Sparkles, TrendingUp, TrendingDown, Target, AlertCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
+import { Skeleton } from './Skeleton';
+
 export default function AiAnalyst({ insight, loading, error, generatedAt }) {
   if (!insight && !loading && !error) return null;
 
@@ -21,7 +23,7 @@ export default function AiAnalyst({ insight, loading, error, generatedAt }) {
           
           {loading ? (
              <div className="text-[10px] uppercase tracking-widest text-olive animate-pulse">
-               Insights updating...
+               Analyzing spending patterns...
              </div>
           ) : generatedAt ? (
              <div className="text-[10px] uppercase tracking-widest text-olive">
@@ -37,10 +39,13 @@ export default function AiAnalyst({ insight, loading, error, generatedAt }) {
         )}
 
         {loading && !insight && (
-          <div className="space-y-6">
-            <div className="h-12 w-3/4 bg-cream-secondary/40 animate-pulse rounded-sm"></div>
-            <div className="h-4 w-1/2 bg-cream-secondary/40 animate-pulse rounded-sm"></div>
-            <div className="h-4 w-2/3 bg-cream-secondary/40 animate-pulse rounded-sm"></div>
+          <div className="space-y-6 animate-in fade-in duration-300">
+            <Skeleton className="h-10 w-full max-w-2xl" />
+            <Skeleton className="h-10 w-3/4 max-w-xl" />
+            <div className="flex gap-4 pt-4">
+              <Skeleton className="h-8 w-28 rounded-full" />
+              <Skeleton className="h-8 w-36 rounded-full" />
+            </div>
           </div>
         )}
 

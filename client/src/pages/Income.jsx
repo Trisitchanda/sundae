@@ -1,41 +1,43 @@
 import React, { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import api from '../services/api';
 import { useToast } from '../components/Toast';
 import MagneticButton from '../components/MagneticButton';
+import { updateUser } from '../features/auth/authSlice';
+import { Skeleton } from '../components/Skeleton';
 
 export default function Income() {
-  const [baseSalary, setBaseSalary] = useState('');
-  const [initialSalary, setInitialSalary] = useState('');
-  const [loading, setLoading] = useState(false);
+  const { user, isLoading: authLoading } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+
+  const userSalaryStr = user?.baseSalary != null ? (user.baseSalary / 100).toString() : '';
+  const [baseSalary, setBaseSalary] = useState(userSalaryStr);
+  const [initialSalary, setInitialSalary] = useState(userSalaryStr);
+  const [saving, setSaving] = useState(false);
   const { showToast } = useToast();
 
+  // Sync state if user loads from network
   useEffect(() => {
-    const fetchIncome = async () => {
-      try {
-        const res = await api.get('/auth/me');
-        if (res.data.data.baseSalary) {
-          const loadedSalary = (res.data.data.baseSalary / 100).toString();
-          setBaseSalary(loadedSalary);
-          setInitialSalary(loadedSalary);
-        }
-      } catch (err) {
-        // Ignored for now
-      }
-    };
-    fetchIncome();
-  }, []);
+    if (user?.baseSalary != null) {
+      const loaded = (user.baseSalary / 100).toString();
+      setBaseSalary(loaded);
+      setInitialSalary(loaded);
+    }
+  }, [user?.baseSalary]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setSaving(true);
     try {
-      await api.put('/settings/income', { baseSalary: Number(baseSalary) });
+      const numericVal = Number(baseSalary);
+      await api.put('/settings/income', { baseSalary: numericVal });
+      dispatch(updateUser({ baseSalary: Math.round(numericVal * 100) }));
       setInitialSalary(baseSalary);
       showToast('Income updated successfully', 'success');
     } catch (err) {
-      showToast('Failed to update income', 'error');
+      showToast(err.response?.data?.message || 'Failed to update income', 'error');
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
@@ -53,26 +55,30 @@ export default function Income() {
           <label className="block text-xs font-medium tracking-widest uppercase text-olive">
             Monthly Base Salary
           </label>
-          <div className="relative">
-            <span className="absolute left-6 top-1/2 -translate-y-1/2 text-olive font-serif text-3xl">₹</span>
-            <input
-              type="number"
-              value={baseSalary}
-              onChange={(e) => setBaseSalary(e.target.value)}
-              className="w-full bg-[#FDFCF8] border border-cream-secondary rounded-lg text-ink pl-12 pr-6 py-4 text-3xl md:text-5xl font-serif num-tabular focus:outline-none focus:border-ink focus:ring-1 focus:ring-ink transition-all interactive shadow-sm"
-              placeholder="0.00"
-              required
-            />
-          </div>
+          {authLoading && !user ? (
+            <Skeleton className="h-16 w-full rounded-lg" />
+          ) : (
+            <div className="relative">
+              <span className="absolute left-6 top-1/2 -translate-y-1/2 text-olive font-serif text-3xl">₹</span>
+              <input
+                type="number"
+                value={baseSalary}
+                onChange={(e) => setBaseSalary(e.target.value)}
+                className="w-full bg-[#FDFCF8] border border-cream-secondary rounded-lg text-ink pl-12 pr-6 py-4 text-3xl md:text-5xl font-serif num-tabular focus:outline-none focus:border-ink focus:ring-1 focus:ring-ink transition-all interactive shadow-sm"
+                placeholder="0.00"
+                required
+              />
+            </div>
+          )}
         </div>
 
         <MagneticButton
           type="submit"
-          disabled={loading || baseSalary === initialSalary || baseSalary === ''}
+          disabled={saving || baseSalary === initialSalary || baseSalary === ''}
           isCta
           className="bg-yellow text-ink px-8 py-4 rounded-sm hover:bg-[#d6c449] transition-colors font-medium tracking-wide disabled:opacity-50 mt-8"
         >
-          {loading ? 'Saving...' : 'Save Base Income'}
+          {saving ? 'Saving...' : 'Save Base Income'}
         </MagneticButton>
       </form>
     </div>

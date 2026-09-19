@@ -10,6 +10,7 @@ import { useRefresh } from '../context/RefreshContext';
 import AiAnalyst from '../components/AiAnalyst';
 import { Sparkles, ArrowRight, AlertCircle } from 'lucide-react';
 import MagneticButton from '../components/MagneticButton';
+import { AnalyticsSkeleton } from '../components/Skeleton';
 
 // Curated premium Warm Money aesthetic colors for charts
 const CHART_COLORS = ['#171714', '#E8D75A', '#C87855', '#7C8060', '#A2AA8A', '#D4AC83', '#EEE8D8'];
@@ -128,9 +129,7 @@ export default function Analytics() {
       </header>
 
       {loading ? (
-        <div className="animate-pulse space-y-16">
-          <div className="h-96 bg-cream-secondary/30 rounded-sm w-full"></div>
-        </div>
+        <AnalyticsSkeleton />
       ) : (
         <div className="space-y-24">
           

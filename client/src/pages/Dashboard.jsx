@@ -7,6 +7,7 @@ import { format } from 'date-fns';
 import { motion } from 'framer-motion';
 import { useRefresh } from '../context/RefreshContext';
 import { CreditCard } from 'lucide-react';
+import { DashboardSkeleton } from '../components/Skeleton';
 
 export default function Dashboard() {
   const { refreshTrigger } = useRefresh();
@@ -47,10 +48,7 @@ export default function Dashboard() {
 
       {/* Main Financial Position */}
       {loading ? (
-        <div className="animate-pulse flex flex-col space-y-8">
-          <div className="h-24 bg-cream-secondary/50 rounded-sm w-full md:w-2/3"></div>
-          <div className="h-32 bg-cream-secondary/30 rounded-sm w-full"></div>
-        </div>
+        <DashboardSkeleton />
       ) : (
         <section className="space-y-16">
           

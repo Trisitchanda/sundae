@@ -6,6 +6,7 @@ import { Search, CreditCard, ChevronLeft, ChevronRight } from 'lucide-react';
 import TransactionModal from '../components/TransactionModal';
 import { motion } from 'framer-motion';
 import { useRefresh } from '../context/RefreshContext';
+import { TransactionsSkeleton } from '../components/Skeleton';
 
 export default function Transactions() {
   const { refreshTrigger } = useRefresh();
@@ -156,7 +157,7 @@ export default function Transactions() {
 
       <div className="border-t border-cream-secondary pt-4 min-h-[400px]">
         {loading && transactions.length === 0 ? (
-          <div className="py-16 text-center text-olive animate-pulse">Loading ledger...</div>
+          <TransactionsSkeleton />
         ) : transactions.length === 0 ? (
           <div className="py-24 text-center">
             <h3 className="font-serif text-2xl text-ink mb-2">No entries found</h3>
